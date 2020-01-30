@@ -5,6 +5,8 @@
 #include <QFileDialog>
 #include <QDataStream>
 #include <QMessageBox>
+#include <QDialog>
+#include <QDialogButtonBox>
 
 //#include <string>  already in macros.h
 // ----------------------- my stuff
@@ -20,6 +22,7 @@
 #include "timlibc2.h"
 #include "holidaycalc2.h"
 #include "getcommandline2.h"
+#include "makesubst.h"
 
 void ProcessInput(string cmdstr);  // forward reference
 
@@ -44,9 +47,10 @@ vector<string>::iterator iter;
 
 Ui::MainWindow *ui;  //make ui global
 
-enum Outputstate {outputfix, outputfloat, outputgen};
+enum OutputStateEnum {outputfix, outputfloat, outputgen};
+OutputStateEnum OutputState = outputfix;
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) { // constructor
     ui->setupUi(this);
 
     QFile fh(CombinedFileName);
@@ -88,7 +92,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     }
 }
 
-MainWindow::~MainWindow() {
+MainWindow::~MainWindow() { // destructor
     delete ui;
 }
 
@@ -96,6 +100,7 @@ MainWindow::~MainWindow() {
 void MainWindow::on_lineEdit_returnPressed() {
     QString inlineedit = ui->lineEdit->text();
     string inbuf = inlineedit.toStdString();
+    inbuf = makesubst(inbuf);
     ProcessInput(inbuf);
 
 }
@@ -103,8 +108,30 @@ void MainWindow::on_lineEdit_returnPressed() {
 void MainWindow::on_pushButton_exit_clicked() {
     QString inlinedit = ui->lineEdit->text();
     string inbuf = inlinedit.toStdString();
+    inbuf = makesubst(inbuf);
     ProcessInput(inbuf);
 }
+
+void WriteStack() {
+    IF OutputState == outputfix THEN
+            // _, stackslice = GetResult("DUMPFIXED");
+    ELSIF OutputState == outputfloat THEN
+            // _, stackslice = GetResult("DUMPFLOAT");
+    ELSIF OutputState == outputgen THEN
+            // _, stackslice = GetResult("DUMP");
+    ENDIF;
+
+    // write the string vector I called stringslice in hpcalcc2 to listWidget_Stack
+}
+
+void WriteReg() {
+
+}
+
+void WriteHelp() {
+
+}
+
 
 void ProcessInput(string cmdstr) {
     string LastCompiled = LastCompiledDate + " " + LastCompiledTime;

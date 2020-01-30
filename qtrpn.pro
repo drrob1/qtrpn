@@ -22,7 +22,8 @@ SOURCES += \
     timlibc2.cpp \
     tokenizec2.cpp \
     holidaycalc2.cpp \
-    hpcalcc2.cpp
+    hpcalcc2.cpp \
+    makesubst.cpp
 
 HEADERS += \
     mainwindow.h \
@@ -32,6 +33,7 @@ HEADERS += \
     tokenizec2.h \
     hpcalcc2.h \
     holidaycalc2.h \
+    makesubst.h
 
 
 FORMS += \
