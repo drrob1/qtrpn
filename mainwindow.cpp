@@ -6,7 +6,7 @@
 #include <QDataStream>
 #include <QMessageBox>
 #include <QDialog>
-#include <QDialogButtonBox>
+#include <QInputDialog>
 
 //#include <string>  already in macros.h
 // ----------------------- my stuff
@@ -113,19 +113,39 @@ void MainWindow::on_pushButton_exit_clicked() {
 }
 
 void WriteStack() {
+
+    calcPairType calcpair; // var calcpair calcPairType  using Go syntax
+    ARRAYOF QString qstack[StackSize];
+
     IF OutputState == outputfix THEN
             // _, stackslice = GetResult("DUMPFIXED");
+            calcpair = GetResult("DUMPFIXED");
     ELSIF OutputState == outputfloat THEN
             // _, stackslice = GetResult("DUMPFLOAT");
+            calcpair = GetResult("DUMPFLOAT");
     ELSIF OutputState == outputgen THEN
             // _, stackslice = GetResult("DUMP");
+            calcpair = GetResult("DUMP");
     ENDIF;
 
-    // write the string vector I called stringslice in hpcalcc2 to listWidget_Stack
+    // assign stack of qstrings and write the string vectors listWidget_Stack
+    for (int i = 0; i < StackSize; i++) {
+        qstack[i] = qstack[i].fromStdString(  calcpair.ss[i]);
+        ui->listWidget_Stack->addItem(qstack[i]);
+    }
 }
 
 void WriteReg() {
+/*
+ * struct RegisterType {
+    double value;
+    QString name;
+};
 
+ARRAYOF RegisterType Storage[36];  // var Storage []RegisterType  in Go syntax
+ */
+
+    //basically have to do w/ these register files what I already did w/ the stack, ie, make formated strings, and likely using streams.
 }
 
 void WriteHelp() {
