@@ -188,7 +188,7 @@ OutputStateEnum OutputState = outputfix;
 } // WriteReg()
 
 void WriteHelp(QWidget *parent) {  // this param is intended so that 'this' can be used in the QMessageBox call.
-    QTextStream textstream;
+    stringstream stream;
     calcPairType calcpairvar;
     vector<string> stringslice;
     vector<string>::iterator iterate;
@@ -197,13 +197,13 @@ void WriteHelp(QWidget *parent) {  // this param is intended so that 'this' can 
 
     IF NOT calcpairvar.ss.empty() THEN
       for (iterate = calcpairvar.ss.begin(); iterate != calcpairvar.ss.end(); iterate++) {
-         QString q;
-         textstream << q.fromStdString(*iterate);
-         endl(textstream);
+         stream << *iterate  << endl;
       }
+
       calcpairvar.ss.clear();
-      flush(textstream);
-      QString qs = *textstream.string();
+      stream.flush();
+
+      QString qs = QString::fromStdString(stream.str());
       QMessageBox::information(parent,"Help", qs);
     ENDIF;
 }
@@ -226,8 +226,6 @@ void ProcessInput(QWidget *parent, Ui::MainWindow *ui, string cmdstr) {
     // Write cmdstr to the history box, ie, listWidget_History.
     QString qs = QString::fromStdString(cmdstr);
     ui->listWidget_History->addItem(qs);
-
-    repaint(ui);
 
     if (cmdstr.compare("help") == 0) {
         WriteHelp(parent);
@@ -264,8 +262,11 @@ void ProcessInput(QWidget *parent, Ui::MainWindow *ui, string cmdstr) {
 // if cmdstr is empty, display message to the output area to exit either type the commands exit, quit, or click the button.
 // maybe I can use the menu structure to also change the output state and sigfig variables.
 
+    repaint(ui);
+
     // clear the input lineedit before returning to it
     ui->lineEdit->clear();
+
 }
 
 
