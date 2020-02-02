@@ -47,6 +47,7 @@
   22 Jan 20 -- Now called hpcalcc2.cpp, to update code and use vectors.
   25 Jan 20 -- Code is basically working.  Added sigfig, ? for help, and StackNames array.
   27 Jan 20 -- Made sigfig = -1 to see what that does.  It works like in Go.  I guess this is std behavior.
+   2 Feb 20 -- Added fixN to work like sigN
 */
 
 /*
@@ -470,9 +471,9 @@ RETURN calcPairType FUNCTION GetResult(string s) {
                       calcpair.ss = DumpStackFixed();
                     ELSIF Token.uStr.compare("DUMPFLOAT") EQ 0 THEN
                       calcpair.ss = DumpStackFloat();
-                    ELSIF Token.uStr.find("SIG") EQ 0 THEN // if found at posn zero, ie string begins with 
+                    ELSIF (Token.uStr.find("SIG") EQ 0) OR (Token.uStr.find("FIX") EQ 0) THEN // if found at posn zero, ie string begins with
                       IF Token.uStr.length() == 3 THEN
-                        sigfig = 9;
+                        sigfig = -1;
                       ELSE
                         int last = Token.uStr.back();
                         last -= '0';
@@ -515,7 +516,7 @@ RETURN calcPairType FUNCTION GetResult(string s) {
                       calcpair.ss.push_back(" !,DN,ROLLDN -- roll the stack down one register.  X goes to T1.");
                       calcpair.ss.push_back(" , or UP -- stack up.  ! or DN -- stack down.");
                       calcpair.ss.push_back(" Dump, Dumpfixed, Dumpfloat, Sho -- dump the stack to the terminal.");
-                      calcpair.ss.push_back(" sigN-- set the sigfig amount, range 0..9");
+                      calcpair.ss.push_back(" sigN, fixN -- set the sigfig amount, range 0..9");
                       calcpair.ss.push_back(" EXP,LN -- evaluate exp(X) or ln(X) and put result back into X.");
                       calcpair.ss.push_back(" ^  -- ABS(Y) to the X power, put result in X and pop stack 1 reg.  Rounds X");
                       calcpair.ss.push_back(" **  -- ABS(Y) to the X power, put result in X and pop stack 1 reg.");

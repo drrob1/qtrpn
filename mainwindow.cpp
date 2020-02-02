@@ -27,9 +27,9 @@
 
 void ProcessInput(string cmdstr);  // forward reference
 
-double R;
-int I;
-int sigfig = -1;
+//double R;  not global
+//int I;     not global
+int SigFig = -1;  // qt creator complained about a double definition of sigfig, so this one is now SigFig
 struct RegisterType {
     double value;
     QString name;
@@ -42,11 +42,8 @@ const char *CombinedFileName = "RPNStackStorage.sav";
 const QString CombinedFilenamestring = CombinedFileName;
 string LastCompiledDate = __DATE__;
 string LastCompiledTime = __TIME__;
-calcPairType calcpair;
-vector<string> stringslice;
-vector<string>::iterator iter;
 
-Ui::MainWindow *ui;  //make ui global
+// Ui::MainWindow *ui;  //make ui global   Didn't work.  I think it crashed the pgm.
 
 enum OutputStateEnum {outputfix, outputfloat, outputgen};
 OutputStateEnum OutputState = outputfix;
@@ -90,7 +87,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             qstr = *iter;
             argv += qstr + " ";
         }
-        ui->lineEdit->setText(argv);
+//        ui->lineEdit->setText(argv);  It's not doing what I want when run thru Qt Creator.
     }
 }
 
@@ -99,7 +96,7 @@ MainWindow::~MainWindow() { // destructor
 }
 
 
-void WriteStack() {
+void WriteStack(Ui::MainWindow *ui) {
 
     calcPairType calcpair; // var calcpair calcPairType  using Go syntax
     ARRAYOF QString qstack[StackSize];
@@ -120,7 +117,7 @@ void WriteStack() {
         qstack[i] = qstack[i].fromStdString(calcpair.ss[i]);
         ui->listWidget_Stack->addItem(qstack[i]);
     }
-}
+} // WriteStack()
 
 int FUNCTION GetRegIdx(char c) {
     int idx = 0;
@@ -133,7 +130,7 @@ int FUNCTION GetRegIdx(char c) {
         idx = ch - 'A' + 10;
     }
     return idx;
-}
+} // GetRegIdx
 
 char FUNCTION GetRegChar(int i) {
     char ch = '\0';
@@ -144,10 +141,9 @@ char FUNCTION GetRegChar(int i) {
         ch = 'A' + i - 10;
     }
     return ch;
-}
+} // GetRegChar
 
-
-void WriteReg() {
+void WriteReg(Ui::MainWindow *ui) {
 /*
  struct RegisterType {
     double value;
@@ -166,10 +162,10 @@ OutputStateEnum OutputState = outputfix;
           textstream << Storage[i].name << "= ";
           if (OutputState == outputfix) {
               fixed(textstream);
-              qSetRealNumberPrecision(sigfig);
+              qSetRealNumberPrecision(SigFig);
           } else if (OutputState == outputfloat) {
               scientific(textstream);
-              qSetRealNumberPrecision(sigfig);
+              qSetRealNumberPrecision(SigFig);
           } else {
               // leave it as whatever it already is from last time it was set
           }
@@ -179,14 +175,13 @@ OutputStateEnum OutputState = outputfix;
   }
   textstream.flush();
   ui->listWidget_Registers->addItem(*textstream.string());
-}
+} // WriteReg()
 
-void WriteHelp(QWidget *parent) {  // this param is intended so that 'this' can be used in the QMessageBox call.
+void WriteHelp(QWidget *parent, Ui::MainWindow *ui) {  // this param is intended so that 'this' can be used in the QMessageBox call.
     QTextStream textstream;
     calcPairType calcpairvar;
     vector<string> stringslice;
     vector<string>::iterator iterate;
-
 
     calcpairvar = GetResult("HELP");
 
@@ -203,39 +198,64 @@ void WriteHelp(QWidget *parent) {  // this param is intended so that 'this' can 
     ENDIF;
 }
 
+void FUNCTION repaint(Ui::MainWindow *ui) {
+  WriteStack(ui);
+  WriteReg(ui);
+} // repaint()
 
-void ProcessInput(QWidget *parent, string cmdstr) {
+
+
+void ProcessInput(QWidget *parent, Ui::MainWindow *ui, string cmdstr) {
     string LastCompiled = LastCompiledDate + " " + LastCompiledTime;
+    calcPairType calcpair;
+    vector<string> stringslice;
+    vector<string>::iterator iter;
 
     PushStacks();
 
-    calcpair = GetResult(cmdstr);
+    // Write cmdstr to the history box, ie, listWidget_History.
+    QString qs = QString::fromStdString(cmdstr);
+    ui->listWidget_History->addItem(qs);
 
-    if (NOT calcpair.ss.empty()) {
-        for (iter = calcpair.ss.begin(); iter != calcpair.ss.end(); iter++) {
-            QString qstr = iter->c_str(); // recall that the -> operator is a type of dereference operator.
-            ui->listWidget_Output->addItem(qstr);
+    repaint(ui);
+
+    if (cmdstr.compare("help") == 0) {
+        WriteHelp(parent, ui);
+    } else {
+        calcpair = GetResult(cmdstr);
+
+        if (NOT calcpair.ss.empty()) {
+            for (iter = calcpair.ss.begin(); iter != calcpair.ss.end(); iter++) {
+                QString qstr = iter->c_str(); // recall that the -> operator is a type of dereference operator.
+                ui->listWidget_Output->addItem(qstr);
+            }
         }
-    }
-    QString qR1, qR2, qR3;
-    string str = to_string(calcpair.R);
-    str = CropNStr(str);
 
-    if (calcpair.R > 10000) str = AddCommas(str);
 
-    qR1 = qR1.arg(str.c_str());
-    qR2 = QString::fromStdString(str);
-    qR3 = qR3.arg(calcpair.R);
-    // qR = qR.arg(calcpair.R,0,'g',-1,' ');  more general form of the conversion which can use 'e', 'f' and sigfig.
-    // qR = qR.arg(calcpair.R,0,'g',sigfig);  more general form of the conversion which can use 'e', 'f' and sigfig.
+        QString qR1, qR2, qR3, qRfix, qRfloat, qRgen;
+        string str = to_string(calcpair.R);
+        str = CropNStr(str);
 
+        if (calcpair.R > 10000) str = AddCommas(str);
+
+        qR1 = qR1.arg(str.c_str());
+        qR2 = QString::fromStdString(str);
+        qR3 = qR3.arg(calcpair.R);
+        qRgen = qRgen.arg(calcpair.R,0,'g',SigFig);// params are: double,int fieldwidth=0, char format='g', int precision= -1 ,QChar fillchar = QLatin1Char(' ')
+        qRfix = qRfix.arg(calcpair.R,0,'g',SigFig);  // more general form of the conversion which can use 'e', 'f' and sigfig.
+        qRfloat = qRfloat.arg(calcpair.R,0,'f',SigFig);
+        QString qoutputline;
+        qoutputline = "qR1=" + qR1 + ", qR2=" + qR2 + ", qR3=" + qR3 + ", qRgen=" + qRgen + ", qRfix=" + qRfix + "qRfloat=" + qRfloat;
+        ui->listWidget_Output->addItem(qoutputline);
+    } // else from if input "help"
 
 // I have to WriteStack, WriteReg, WriteHelp, output command line list, process some commands not run thru GetResult, like stoN, rclN, fix, float, gen, exit, quit, sigfig,
 // have command not found error displayed
 // if cmdstr is empty, display message to the output area to exit either type the commands exit, quit, or click the button.
 // maybe I can use the menu structure to also change the output state and sigfig variables.
 
-  WriteHelp(parent);
+    // clear the input lineedit before returning to it
+    ui->lineEdit->clear();
 }
 
 
@@ -243,18 +263,15 @@ void MainWindow::on_lineEdit_returnPressed() {
     QString inlineedit = ui->lineEdit->text();
     string inbuf = inlineedit.toStdString();
     inbuf = makesubst(inbuf);
-    ProcessInput(this, inbuf);
+    ProcessInput(this, ui, inbuf);
 }
 
 void MainWindow::on_pushButton_exit_clicked() {
     QString inlinedit = ui->lineEdit->text();
     string inbuf = inlinedit.toStdString();
     inbuf = makesubst(inbuf);
-    ProcessInput(this, inbuf);
+    ProcessInput(this, ui, inbuf);
 }
-
-
-
 
 void MainWindow::on_pushButton_quit_clicked()
 {
@@ -262,4 +279,40 @@ void MainWindow::on_pushButton_quit_clicked()
     // same as QCoreApplication::quit();
     // if the event loop is not running, these quit() commands will not work.  In that case, need to call exit(EXIT_FAILURE);
     exit(EXIT_FAILURE);
+}
+
+void MainWindow::on_action2_triggered()
+{
+    SigFig = 0;
+    GetResult("sig0");
+}
+
+void MainWindow::on_action4_triggered()
+{
+    SigFig = 2;
+    GetResult("sig2");
+}
+
+void MainWindow::on_action4_2_triggered()
+{
+    SigFig = 4;
+    GetResult("fix4");
+}
+
+void MainWindow::on_action6_triggered()
+{
+    SigFig = 6;
+    GetResult("fix6");
+}
+
+void MainWindow::on_action8_triggered()
+{
+    SigFig = 8;
+    GetResult("sig8");
+}
+
+void MainWindow::on_action_1_triggered()
+{
+    SigFig = -1;
+    GetResult("sig");
 }
