@@ -7,7 +7,7 @@
 #include <QMessageBox>
 #include <QDialog>
 #include <QInputDialog>
-#include <QTextStream>
+#include <QTextStream>  // doesn't do what I want.  I want stringstream functionality.  I'll just have to use a stringstream for that, after all.
 
 //#include <string>  already in macros.h
 // ----------------------- my stuff
@@ -154,30 +154,40 @@ ARRAYOF RegisterType Storage[36];  // var Storage []RegisterType  in Go syntax
 enum OutputStateEnum {outputfix, outputfloat, outputgen};
 OutputStateEnum OutputState = outputfix;
  */
-  QTextStream textstream;
+  stringstream stream;
 
+  stream << "The following registers are not zero.";
   for (int i = 0; i < 36; i++) {
       if (Storage[i].value != 0.) {
-          textstream << "Reg [" << GetRegChar(i) << "]: ";
-          textstream << Storage[i].name << "= ";
+          stream << "Reg [" << GetRegChar(i) << "]: ";
+          stream << Storage[i].name.toStdString() << "= ";
           if (OutputState == outputfix) {
-              fixed(textstream);
-              qSetRealNumberPrecision(SigFig);
+              stream.setf(ios::fixed);
+              stream.width(15);
+              stream.precision(SigFig);
+              stream << Storage[i].value << endl;
+
           } else if (OutputState == outputfloat) {
-              scientific(textstream);
-              qSetRealNumberPrecision(SigFig);
+              stream.setf(ios::scientific);
+              stream.width(15);
+              stream.precision(SigFig);
+              stream << Storage[i].value << endl;
+
           } else {
-              // leave it as whatever it already is from last time it was set
+              string str;
+              str = to_string(Storage[i].value);
+              stream << str << endl;
+
           }
-          textstream << Storage[i].value;
-          endl(textstream);
+
       }
   }
-  textstream.flush();
-  ui->listWidget_Registers->addItem(*textstream.string());
+  stream.flush();
+  QString qstr = QString::fromStdString(stream.str());
+  ui->listWidget_Registers->addItem(qstr);
 } // WriteReg()
 
-void WriteHelp(QWidget *parent, Ui::MainWindow *ui) {  // this param is intended so that 'this' can be used in the QMessageBox call.
+void WriteHelp(QWidget *parent) {  // this param is intended so that 'this' can be used in the QMessageBox call.
     QTextStream textstream;
     calcPairType calcpairvar;
     vector<string> stringslice;
@@ -220,7 +230,7 @@ void ProcessInput(QWidget *parent, Ui::MainWindow *ui, string cmdstr) {
     repaint(ui);
 
     if (cmdstr.compare("help") == 0) {
-        WriteHelp(parent, ui);
+        WriteHelp(parent);
     } else {
         calcpair = GetResult(cmdstr);
 
@@ -264,13 +274,23 @@ void MainWindow::on_lineEdit_returnPressed() {
     string inbuf = inlineedit.toStdString();
     inbuf = makesubst(inbuf);
     ProcessInput(this, ui, inbuf);
+    show();
+}
+
+void MainWindow::on_pushButton_enter_clicked()
+{
+    QString inlineedit = ui->lineEdit->text();
+    string inbuf = inlineedit.toStdString();
+    inbuf = makesubst(inbuf);
+    ProcessInput(this, ui, inbuf);
+    show();
 }
 
 void MainWindow::on_pushButton_exit_clicked() {
-    QString inlinedit = ui->lineEdit->text();
-    string inbuf = inlinedit.toStdString();
-    inbuf = makesubst(inbuf);
-    ProcessInput(this, ui, inbuf);
+    QApplication::quit();
+    // same as QCoreApplication::quit();
+    // if the event loop is not running, these quit() commands will not work.  In that case, need to call exit(EXIT_FAILURE);
+    exit(EXIT_FAILURE);
 }
 
 void MainWindow::on_pushButton_quit_clicked()
