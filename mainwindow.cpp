@@ -112,6 +112,7 @@ void WriteStack(Ui::MainWindow *ui) {
             calcpair = GetResult("DUMP");
     ENDIF;
 
+    ui->listWidget_Stack->clear();
     // assign stack of qstrings and write the string vectors listWidget_Stack
     for (int i = 0; i < StackSize; i++) {
         qstack[i] = qstack[i].fromStdString(calcpair.ss[i]);
@@ -183,6 +184,7 @@ OutputStateEnum OutputState = outputfix;
       }
   }
   stream.flush();
+  ui->listWidget_Registers->clear();
   QString qstr = QString::fromStdString(stream.str());
   ui->listWidget_Registers->addItem(qstr);
 } // WriteReg()
@@ -275,7 +277,7 @@ void MainWindow::on_lineEdit_returnPressed() {
     string inbuf = inlineedit.toStdString();
     inbuf = makesubst(inbuf);
     ProcessInput(this, ui, inbuf);
-    show();
+    //show();  not needed.
 }
 
 void MainWindow::on_pushButton_enter_clicked()
@@ -284,7 +286,7 @@ void MainWindow::on_pushButton_enter_clicked()
     string inbuf = inlineedit.toStdString();
     inbuf = makesubst(inbuf);
     ProcessInput(this, ui, inbuf);
-    show();
+    //show();  not needed.
 }
 
 void MainWindow::on_pushButton_exit_clicked() {
