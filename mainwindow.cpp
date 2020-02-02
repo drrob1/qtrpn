@@ -7,6 +7,7 @@
 #include <QMessageBox>
 #include <QDialog>
 #include <QInputDialog>
+#include <QTextStream>
 
 //#include <string>  already in macros.h
 // ----------------------- my stuff
@@ -50,6 +51,7 @@ Ui::MainWindow *ui;  //make ui global
 enum OutputStateEnum {outputfix, outputfloat, outputgen};
 OutputStateEnum OutputState = outputfix;
 
+// constructor
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) { // constructor
     ui->setupUi(this);
 
@@ -97,21 +99,6 @@ MainWindow::~MainWindow() { // destructor
 }
 
 
-void MainWindow::on_lineEdit_returnPressed() {
-    QString inlineedit = ui->lineEdit->text();
-    string inbuf = inlineedit.toStdString();
-    inbuf = makesubst(inbuf);
-    ProcessInput(inbuf);
-
-}
-
-void MainWindow::on_pushButton_exit_clicked() {
-    QString inlinedit = ui->lineEdit->text();
-    string inbuf = inlinedit.toStdString();
-    inbuf = makesubst(inbuf);
-    ProcessInput(inbuf);
-}
-
 void WriteStack() {
 
     calcPairType calcpair; // var calcpair calcPairType  using Go syntax
@@ -130,30 +117,94 @@ void WriteStack() {
 
     // assign stack of qstrings and write the string vectors listWidget_Stack
     for (int i = 0; i < StackSize; i++) {
-        qstack[i] = qstack[i].fromStdString(  calcpair.ss[i]);
+        qstack[i] = qstack[i].fromStdString(calcpair.ss[i]);
         ui->listWidget_Stack->addItem(qstack[i]);
     }
 }
 
+int FUNCTION GetRegIdx(char c) {
+    int idx = 0;
+    char ch;
+
+    ch = CAP(c);
+    if ((ch >= '0') AND (ch <= '9')) {
+        idx = ch - '0';
+    } else if ((ch >= 'A') AND (ch <= 'Z'))   {
+        idx = ch - 'A' + 10;
+    }
+    return idx;
+}
+
+char FUNCTION GetRegChar(int i) {
+    char ch = '\0';
+
+    if ((i >= 0) AND (i <= 9)) {
+        ch = '0' + i;
+    } else if ((i >= 10) AND (i < 36)) {
+        ch = 'A' + i - 10;
+    }
+    return ch;
+}
+
+
 void WriteReg() {
 /*
- * struct RegisterType {
+ struct RegisterType {
     double value;
     QString name;
-};
-
+ };
 ARRAYOF RegisterType Storage[36];  // var Storage []RegisterType  in Go syntax
+
+enum OutputStateEnum {outputfix, outputfloat, outputgen};
+OutputStateEnum OutputState = outputfix;
  */
+  QTextStream textstream;
 
-    //basically have to do w/ these register files what I already did w/ the stack, ie, make formated strings, and likely using streams.
+  for (int i = 0; i < 36; i++) {
+      if (Storage[i].value != 0.) {
+          textstream << "Reg [" << GetRegChar(i) << "]: ";
+          textstream << Storage[i].name << "= ";
+          if (OutputState == outputfix) {
+              fixed(textstream);
+              qSetRealNumberPrecision(sigfig);
+          } else if (OutputState == outputfloat) {
+              scientific(textstream);
+              qSetRealNumberPrecision(sigfig);
+          } else {
+              // leave it as whatever it already is from last time it was set
+          }
+          textstream << Storage[i].value;
+          endl(textstream);
+      }
+  }
+  textstream.flush();
+  ui->listWidget_Registers->addItem(*textstream.string());
 }
 
-void WriteHelp() {
+void WriteHelp(QWidget *parent) {  // this param is intended so that 'this' can be used in the QMessageBox call.
+    QTextStream textstream;
+    calcPairType calcpairvar;
+    vector<string> stringslice;
+    vector<string>::iterator iterate;
 
+
+    calcpairvar = GetResult("HELP");
+
+    IF NOT calcpairvar.ss.empty() THEN
+      for (iterate = calcpairvar.ss.begin(); iterate != calcpairvar.ss.end(); iterate++) {
+         QString q;
+         textstream << q.fromStdString(*iterate);
+         endl(textstream);
+      }
+      calcpairvar.ss.clear();
+      flush(textstream);
+      QString qs = *textstream.string();
+      QMessageBox::information(parent,"Help", qs);
+    ENDIF;
 }
 
 
-void ProcessInput(string cmdstr) {
+void ProcessInput(QWidget *parent, string cmdstr) {
     string LastCompiled = LastCompiledDate + " " + LastCompiledTime;
 
     PushStacks();
@@ -184,9 +235,23 @@ void ProcessInput(string cmdstr) {
 // if cmdstr is empty, display message to the output area to exit either type the commands exit, quit, or click the button.
 // maybe I can use the menu structure to also change the output state and sigfig variables.
 
-
+  WriteHelp(parent);
 }
 
+
+void MainWindow::on_lineEdit_returnPressed() {
+    QString inlineedit = ui->lineEdit->text();
+    string inbuf = inlineedit.toStdString();
+    inbuf = makesubst(inbuf);
+    ProcessInput(this, inbuf);
+}
+
+void MainWindow::on_pushButton_exit_clicked() {
+    QString inlinedit = ui->lineEdit->text();
+    string inbuf = inlinedit.toStdString();
+    inbuf = makesubst(inbuf);
+    ProcessInput(this, inbuf);
+}
 
 
 
