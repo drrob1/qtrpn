@@ -248,14 +248,15 @@ void ProcessInput(QWidget *parent, Ui::MainWindow *ui, string cmdstr) {
 
         if (calcpair.R > 10000) str = AddCommas(str);
 
-        qR1 = qR1.arg(str.c_str());
-        qR2 = QString::fromStdString(str);
-        qR3 = qR3.arg(calcpair.R);
-        qRgen = qRgen.arg(calcpair.R,0,'g',SigFig);// params are: double,int fieldwidth=0, char format='g', int precision= -1 ,QChar fillchar = QLatin1Char(' ')
-        qRfix = qRfix.arg(calcpair.R,0,'g',SigFig);  // more general form of the conversion which can use 'e', 'f' and sigfig.
-        qRfloat = qRfloat.arg(calcpair.R,0,'f',SigFig);
+        qR1 = qR1.arg(str.c_str()); // this doesn't work
+        qR2 = QString::fromStdString(str); // this is only line that works
+        qR3 = qR3.arg(calcpair.R);  // this doesn't work
+        qRgen = qRgen.arg(calcpair.R,0,'f',SigFig);// params are: double,int fieldwidth=0, char format='g', int precision= -1 ,QChar fillchar = QLatin1Char(' ').  Not working.
+        qRfix = qRfix.arg(calcpair.R,0,'f',SigFig);  // more general form of the conversion which can use 'e', 'f' and sigfig.  Not working
+        qRfloat = qRfloat.arg(calcpair.R,0,'f',SigFig);  // not working.
         QString qoutputline;
-        qoutputline = "qR1=" + qR1 + ", qR2=" + qR2 + ", qR3=" + qR3 + ", qRgen=" + qRgen + ", qRfix=" + qRfix + "qRfloat=" + qRfloat;
+        qoutputline = "qR1= " + qR1 + ", qR2= " + qR2 + ", qR3= " + qR3 + ", qRgen= " + qRgen + ", qRfix= " + qRfix + ", qRfloat= " + qRfloat;
+        ui->listWidget_Output->clear();
         ui->listWidget_Output->addItem(qoutputline);
     } // else from if input "help"
 
@@ -290,52 +291,61 @@ void MainWindow::on_pushButton_enter_clicked()
 }
 
 void MainWindow::on_pushButton_exit_clicked() {
-    QApplication::quit();
-    // same as QCoreApplication::quit();
+    GETSTACK(Stk);
+// need to write the file
+    QApplication::quit();      // same as QCoreApplication::quit();
+
     // if the event loop is not running, these quit() commands will not work.  In that case, need to call exit(EXIT_FAILURE);
     exit(EXIT_FAILURE);
 }
 
-void MainWindow::on_pushButton_quit_clicked()
-{
-    QApplication::quit();
-    // same as QCoreApplication::quit();
+void MainWindow::on_pushButton_quit_clicked() {
+    GETSTACK(Stk);
+// need to write the file
+    QApplication::quit();      // same as QCoreApplication::quit();
+
     // if the event loop is not running, these quit() commands will not work.  In that case, need to call exit(EXIT_FAILURE);
     exit(EXIT_FAILURE);
 }
 
-void MainWindow::on_action2_triggered()
-{
+void MainWindow::on_action2_triggered() {
     SigFig = 0;
     GetResult("sig0");
 }
 
-void MainWindow::on_action4_triggered()
-{
+void MainWindow::on_action4_triggered() {
     SigFig = 2;
     GetResult("sig2");
 }
 
-void MainWindow::on_action4_2_triggered()
-{
+void MainWindow::on_action4_2_triggered() {
     SigFig = 4;
     GetResult("fix4");
 }
 
-void MainWindow::on_action6_triggered()
-{
+void MainWindow::on_action6_triggered() {
     SigFig = 6;
     GetResult("fix6");
 }
 
-void MainWindow::on_action8_triggered()
-{
+void MainWindow::on_action8_triggered() {
     SigFig = 8;
     GetResult("sig8");
 }
 
-void MainWindow::on_action_1_triggered()
-{
+void MainWindow::on_action_1_triggered() {
     SigFig = -1;
     GetResult("sig");
+}
+
+void MainWindow::on_actionfixed_triggered() {
+    OutputState = outputfix;
+}
+
+void MainWindow::on_actionfloat_triggered() {
+    OutputState = outputfloat;
+}
+
+void MainWindow::on_actiongen_triggered() {
+    OutputState = outputgen;
 }

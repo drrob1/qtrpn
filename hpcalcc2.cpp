@@ -47,7 +47,9 @@
   22 Jan 20 -- Now called hpcalcc2.cpp, to update code and use vectors.
   25 Jan 20 -- Code is basically working.  Added sigfig, ? for help, and StackNames array.
   27 Jan 20 -- Made sigfig = -1 to see what that does.  It works like in Go.  I guess this is std behavior.
-   2 Feb 20 -- Added fixN to work like sigN
+   2 Feb 20 -- Added fixN command to behave like sigN command.
+   2 Feb 20 -- Started to add the prime and primefac command code, derived from Go.
+   4 Feb 20 -- Fiddled with a format code for the prime cmd.
 */
 
 /*
@@ -406,8 +408,158 @@ RETURN int FUNCTION HCF(int a, int b) {
   return a1;
 };// HCF
 
+/*  From Go.  Converting to C++. */
+// ------------------------------------------------- IsPrime -----------------
+//  func IsPrime(real float64) bool { // The real input is to allow from stack.
+bool FUNCTION IsPrime(double real) { // The real input is to allow from stack.
+
+	int t = 3;
+	int RoundSqrt, Uint, Rsqrt;  // Uint was just that in Go, but I won't do that here.
+
+	Uint = round(abs(real));
+
+	if (Uint == 0 || Uint == 1) {
+		return false;
+	} else if (Uint == 2 || Uint == 3) {
+		return true;
+	} else if (Uint % 2 == 0) {
+		return false;
+	}
+
+	Rsqrt = sqrt(real);
+	RoundSqrt = round(Rsqrt);
+
+	WHILE t <= RoundSqrt DO
+		if (Uint % t == 0) {
+			return false;
+		}
+		t += 2;
+	ENDWHILE;
+	return true;
+} // IsPrime
+
+
+// ------------------------------------------------- IsPrimeInt -----------------
+//func IsPrimeInt(n int) bool {
+bool FUNCTION IsPrimeInt(int n) {
+
+	int t = 3;
+
+	int Uint = n;
+
+	IF Uint == 0 || Uint == 1 THEN
+		return false;
+    ELSIF Uint == 2 || Uint == 3 THEN
+		return true;
+	ELSIF Uint%2 == 0 THEN
+		return false;
+	ENDIF
+
+    int Sqrt = sqrt( (double) Uint);
+	int UintSqrt = (int) Sqrt;
+
+	WHILE t <= UintSqrt DO
+		IF Uint%t == 0 THEN
+			return false;
+		ENDIF;
+		t += 2;
+	ENDWHILE;
+	return true;
+} // IsPrimeInt
+
+// ------------------------------------------------- PrimeFactorization ---------------------------------
+//func PrimeFactorization(N int) []int {
+vector<int> FUNCTION PrimeFactorization(int N) {
+	ARRAYOF int PD[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47}; // Prime divisors array
+    vector<int> PrimeFactors;
+    int n;
+
+    PrimeFactors.clear();
+
+	n = N;
+    int lenPD = (int) sizeof(PD);
+	FOR int i = 0; i < lenPD; i++ DO // outer loop to sequentially test the prime divisors
+		WHILE n > 0 && n%PD[i] == 0 DO
+			PrimeFactors.push_back(PD[i]);
+			n = n / PD[i];
+		ENDWHILE;
+		IF n == 0 || IsPrimeInt(n) THEN
+			PrimeFactors.push_back(n);
+			break;
+		ENDIF
+	ENDFOR;
+	return PrimeFactors;
+
+} // PrimeFactorization
+
+//----------------------------------------------- usqrt ---------------------------
+//func usqrt(u uint) uint {
+int FUNCTION usqrt(int u) {
+
+	int Sqrt = u / 2;
+
+	FOR int i = 0; i < 30; i++ DO
+		int guess = u / Sqrt;
+		Sqrt = (guess + Sqrt) / 2;
+		IF Sqrt-guess <= 1 THEN // recall that this is not floating math.
+			break;
+		ENDIF;
+	ENDFOR;
+	return Sqrt;
+}
+
+// ------------------------------------------------- NextPrimeFac -----------------
+//func NextPrimeFac(n, startfac uint) (uint, bool) { // note that this is the reverse of IsPrime
+bool FUNCTION NextPrimeFac(int n, int REF startfac) { // note that this is the reverse of IsPrime
+
+	int t = startfac;
+
+	int UintSqrt = usqrt(n);
+
+	WHILE t <= UintSqrt DO
+		IF n % t == 0 THEN
+            startfac = t;  // in Go, this was returned part of a tuple.  Not allowed in C++.
+			return true;
+		ENDIF;
+		IF t == 2 THEN
+			t = 3;
+		ELSE 
+			t += 2;
+		ENDIF;
+	ENDWHILE;
+    startfac = 0;  // in Go, this was returned part of a tuple.  Not allowed in C++.
+	return false;
+} // IsPrime
+
+// --------------------------------------- PrimeFactorMemoized -------------------
+//func PrimeFactorMemoized(U uint) []uint {
+vector<int> FUNCTION PrimeFactorMemoized(int U) {
+
+    vector<int> PrimeUfactors;
+
+    PrimeUfactors.clear();
+
+	if (U == 0) {
+		return PrimeUfactors;
+	}
+
+	int fac = 2;
+
+	FOR int i = U; i > 1; DO
+		bool facflag = NextPrimeFac(i, fac); // fac is a REF param
+		if (facflag) {
+			PrimeUfactors.push_back(fac);
+			i = i / fac;
+		} else {
+			PrimeUfactors.push_back(i);
+			break;
+		}
+	ENDFOR;
+	return PrimeUfactors;
+} // PrimeFactorMemoized
+
 //-------------------------------------------------------------------------
-RETURN calcPairType FUNCTION GetResult(string s) {
+calcPairType FUNCTION GetResult(string s) {
 /*
   struct calcPairType {  // defined in header file
     vector<string> ss;
@@ -471,9 +623,9 @@ RETURN calcPairType FUNCTION GetResult(string s) {
                       calcpair.ss = DumpStackFixed();
                     ELSIF Token.uStr.compare("DUMPFLOAT") EQ 0 THEN
                       calcpair.ss = DumpStackFloat();
-                    ELSIF (Token.uStr.find("SIG") EQ 0) OR (Token.uStr.find("FIX") EQ 0) THEN // if found at posn zero, ie string begins with
+                    ELSIF (Token.uStr.find("SIG") EQ 0) OR (Token.uStr.find("FIX") EQ 0) THEN // if found at posn zero, ie string begins with 
                       IF Token.uStr.length() == 3 THEN
-                        sigfig = -1;
+                        sigfig = 9;
                       ELSE
                         int last = Token.uStr.back();
                         last -= '0';
@@ -484,6 +636,40 @@ RETURN calcPairType FUNCTION GetResult(string s) {
                           sigfig = -1;
                         END;
                       END;
+                    ELSIF Token.uStr.compare("PRIME") EQ 0 THEN
+                      PushStacks();
+                      int n = round(Stack[X]);
+                      IF IsPrime(n) THEN
+                          char s[50];
+                          sprintf(s,"%10.0f is prime.",Stack[X]);
+                          string str = s;
+                          calcpair.ss.push_back(str);
+                      ELSE
+                          char s[50];
+                          sprintf(s,"%10.0f is not prime.",Stack[X]);
+                          string str = s;
+                          calcpair.ss.push_back(str);
+                      ENDIF;
+
+                    ELSIF Token.uStr.find("PRIMEF") EQ 0 THEN
+                      PushStacks();
+                      int n = round(Stack[X]);
+                      vector<int> primefactors = PrimeFactorMemoized(n);
+                      vector<int>::iterator primeit;
+
+                      // always will have as factors 1 and itself.  Cannot get an empty set of factors.
+                      string str;
+                      FOR primeit = primefactors.begin(); primeit != primefactors.end(); primeit++ DO
+                        char s[50];
+                        sprintf(s, "%d", *primeit);
+                        string s1 = s;
+                        str.append(s1);
+                        str.append(", ");
+                      ENDIF;
+                      str.pop_back();  // delete the last ", "
+                      str.pop_back();  // delete the last ", "
+                      calcpair.ss.push_back(str);
+
                     ELSIF Token.uStr.compare("SQR") EQ 0 THEN
                       LastX = Stack[X];
                       PushStacks();
@@ -499,7 +685,8 @@ RETURN calcPairType FUNCTION GetResult(string s) {
                     ELSIF Token.uStr.compare("CURT") EQ 0 THEN
                       LastX = Stack[X];
                       PushStacks();
-                      Stack[X] = exp(log(Stack[X])/3.0);
+                      // Stack[X] = exp(log(Stack[X])/3.0); old way
+                      Stack[X] = cbrt(Stack[X]);
                     ELSIF Token.uStr.compare("VOL") EQ 0 THEN
                       LastX = Stack[X];
                       PushStacks();
@@ -517,12 +704,13 @@ RETURN calcPairType FUNCTION GetResult(string s) {
                       calcpair.ss.push_back(" , or UP -- stack up.  ! or DN -- stack down.");
                       calcpair.ss.push_back(" Dump, Dumpfixed, Dumpfloat, Sho -- dump the stack to the terminal.");
                       calcpair.ss.push_back(" sigN, fixN -- set the sigfig amount, range 0..9");
+                      calcpair.ss.push_back(" prime, primefac -- calls IsPrime and PrimeFacMemoized.");
                       calcpair.ss.push_back(" EXP,LN -- evaluate exp(X) or ln(X) and put result back into X.");
                       calcpair.ss.push_back(" ^  -- ABS(Y) to the X power, put result in X and pop stack 1 reg.  Rounds X");
                       calcpair.ss.push_back(" **  -- ABS(Y) to the X power, put result in X and pop stack 1 reg.");
                       calcpair.ss.push_back(" INT, ROUND, FRAC, PI -- do what their names suggest.");
                       calcpair.ss.push_back(" MOD -- evaluate Y MOD X, put result in X and pop stack 1 reg.");
-		      calcpair.ss.push_back(" %   -- does XY/100, places result in X.  Leaves Y alone.");
+		              calcpair.ss.push_back(" %   -- does XY/100, places result in X.  Leaves Y alone.");
                       calcpair.ss.push_back(" SIN,COS,TAN,ARCTAN,ARCSIN,ARCCOS -- In deg.");
                       calcpair.ss.push_back(" D2R -- perform degrees to radians conversion of the X register.");
                       calcpair.ss.push_back(" R2D -- perform radians to degrees conversion of the X register.");
