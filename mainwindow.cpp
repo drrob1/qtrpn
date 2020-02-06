@@ -7,7 +7,7 @@
 #include <QMessageBox>
 #include <QDialog>
 #include <QInputDialog>
-#include <QTextStream>  // doesn't do what I want.  I want stringstream functionality.  I'll just have to use a stringstream for that, after all.
+#include <QDir>
 
 //#include <string>  already in macros.h
 // ----------------------- my stuff
@@ -39,7 +39,7 @@ ARRAYOF RegisterType Storage[36];  // var Storage []RegisterType  in Go syntax
 ARRAYOF double Stk[StackSize];
 bool CombinedFileExists;
 const char *CombinedFileName = "RPNStackStorage.sav";
-const QString CombinedFilenamestring = CombinedFileName;
+QString CombinedFilenamestring;
 string LastCompiledDate = __DATE__;
 string LastCompiledTime = __TIME__;
 
@@ -52,7 +52,8 @@ OutputStateEnum OutputState = outputfix;
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) { // constructor
     ui->setupUi(this);
 
-    QFile fh(CombinedFileName);
+    CombinedFilenamestring = QDir::homePath() + "/" + CombinedFileName;
+    QFile fh(CombinedFilenamestring);
     CombinedFileExists = fh.exists();
     if (CombinedFileExists) { // read the file into the stack and storage registers.
         bool opened = fh.open(QFile::ReadOnly);
@@ -217,7 +218,7 @@ void FUNCTION repaint(Ui::MainWindow *ui) {
 
 
 
-void ProcessInput(QWidget *parent, Ui::MainWindow *ui, string cmdstr) {
+void FUNCTION ProcessInput(QWidget *parent, Ui::MainWindow *ui, string cmdstr) {
     string LastCompiled = LastCompiledDate + " " + LastCompiledTime;
     calcPairType calcpair;
     vector<string> stringslice;
@@ -231,6 +232,16 @@ void ProcessInput(QWidget *parent, Ui::MainWindow *ui, string cmdstr) {
 
     if (cmdstr.compare("help") == 0) {
         WriteHelp(parent);
+    } else if (cmdstr.find("STO") EQ 0) {
+
+    } else if (cmdstr.find("RCL") EQ 0) {
+
+    } else if (cmdstr.compare("NAME") EQ 0) {
+
+    } else if ((cmdstr.compare("DUMP") EQ 0) OR (cmdstr.find("SHO") EQ 0)) {
+
+    } else if (cmdstr.compare("ABOUT") EQ 0) {
+
     } else {
         calcpair = GetResult(cmdstr);
 
@@ -291,10 +302,12 @@ void MainWindow::on_pushButton_enter_clicked() {
 
 void MainWindow::on_pushButton_exit_clicked() {
     GETSTACK(Stk);
+
 // need to write the file
-    QFile file(CombinedFileName);
+    QMessageBox::information(this,"filename", CombinedFilenamestring);
+    QFile file(CombinedFilenamestring);
     if (! file.open(QFile::WriteOnly)) {  // need to match up what's read and what's written.
-        QMessageBox::warning(this,"open failed","file could not be opened in write text mode.");
+        QMessageBox::warning(this,"open failed","file could not be opened in write mode.");
         return;
     }
     QDataStream stackout(&file);
@@ -319,8 +332,8 @@ void MainWindow::on_pushButton_exit_clicked() {
 }
 
 void MainWindow::on_pushButton_quit_clicked() {
-    GETSTACK(Stk);
-// need to write the file
+//    GETSTACK(Stk);
+// need to write the file for exit button, but I'll see how it goes for quit button not saving the state.
     QApplication::quit();      // same as QCoreApplication::quit();
 
     // if the event loop is not running, these quit() commands will not work.  In that case, need to call exit(EXIT_FAILURE);
