@@ -281,8 +281,7 @@ void MainWindow::on_lineEdit_returnPressed() {
     //show();  not needed.
 }
 
-void MainWindow::on_pushButton_enter_clicked()
-{
+void MainWindow::on_pushButton_enter_clicked() {
     QString inlineedit = ui->lineEdit->text();
     string inbuf = inlineedit.toStdString();
     inbuf = makesubst(inbuf);
@@ -293,6 +292,26 @@ void MainWindow::on_pushButton_enter_clicked()
 void MainWindow::on_pushButton_exit_clicked() {
     GETSTACK(Stk);
 // need to write the file
+    QFile file(CombinedFileName);
+    if (! file.open(QFile::WriteOnly)) {  // need to match up what's read and what's written.
+        QMessageBox::warning(this,"open failed","file could not be opened in write text mode.");
+        return;
+    }
+    QDataStream stackout(&file);
+
+    FOR int i = 0; i < StackSize; i++ DO
+      stackout << Stk[i];
+    ENDFOR;
+
+    FOR int i = 0; i < 36; i++ DO
+      stackout << Storage[i].value;
+      stackout << Storage[i].name;
+    ENDFOR;
+
+    file.flush();
+    file.close();
+
+
     QApplication::quit();      // same as QCoreApplication::quit();
 
     // if the event loop is not running, these quit() commands will not work.  In that case, need to call exit(EXIT_FAILURE);
