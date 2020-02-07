@@ -74,11 +74,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         }
     } else {  // init the stack and storage registers to the zero value for each type.
         for (int i = 0; i < StackSize; i++) Stk[i] = 0.;  // Zero out stack
+
         for (int i = 0; i < 36; i++) {
             Storage[i].value = 0.;
             Storage[i].name = "";
         }
     }
+
     QStringList list = QCoreApplication::arguments();
     QString qstr, argv;
     if (NOT list.isEmpty()){
@@ -90,6 +92,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         }
 //        ui->lineEdit->setText(argv);  It's not doing what I want when run thru Qt Creator.
     }
+
 }
 
 MainWindow::~MainWindow() { // destructor
@@ -223,6 +226,8 @@ void FUNCTION ProcessInput(QWidget *parent, Ui::MainWindow *ui, string cmdstr) {
     calcPairType calcpair;
     vector<string> stringslice;
     vector<string>::iterator iter;
+    //string aboutmsg;    \ didn't matter.
+    //QString qaboutmsg;  /
 
     PushStacks();
 
@@ -232,15 +237,30 @@ void FUNCTION ProcessInput(QWidget *parent, Ui::MainWindow *ui, string cmdstr) {
 
     if (cmdstr.compare("help") == 0) {
         WriteHelp(parent);
-    } else if (cmdstr.find("STO") EQ 0) {
+    } else if (cmdstr.find("sto") EQ 0) {
 
-    } else if (cmdstr.find("RCL") EQ 0) {
+    } else if (cmdstr.find("rcl") EQ 0) {
 
-    } else if (cmdstr.compare("NAME") EQ 0) {
+    } else if (cmdstr.compare("name") EQ 0) {
 
-    } else if ((cmdstr.compare("DUMP") EQ 0) OR (cmdstr.find("SHO") EQ 0)) {
+    } else if ((cmdstr.compare("dump") EQ 0) OR (cmdstr.find("sho") EQ 0)) {
+        // do nothing
+    } else if (cmdstr.compare("about") EQ 0) {
+        calcpair = GetResult("ABOUT");
+        for (iter = calcpair.ss.begin(); iter != calcpair.ss.end(); iter++) {
+            QString qstr = iter->c_str(); // recall that the -> operator is a type of dereference operator.
+            ui->listWidget_Output->addItem(qstr);
+        }
+        char about[] = "MainWindow Pgm last compiled ";
+        string aboutmsg = about;
+        aboutmsg = "MainWindow Pgm last compiled " + LastCompiledDate + " " + LastCompiledTime;
+        aboutmsg = LastCompiledDate + " " + LastCompiledTime;
+        QString qaboutmsg;
+        qaboutmsg.fromStdString(aboutmsg);
+        QMessageBox::information(parent,"about msg", qaboutmsg);
+        ui->listWidget_Output->addItem(qaboutmsg);
 
-    } else if (cmdstr.compare("ABOUT") EQ 0) {
+
 
     } else {
         calcpair = GetResult(cmdstr);
@@ -267,7 +287,7 @@ void FUNCTION ProcessInput(QWidget *parent, Ui::MainWindow *ui, string cmdstr) {
         qRfloat = qRfloat.arg(calcpair.R,0,'f',SigFig);  // not working.
         QString qoutputline;
         qoutputline = "qR1= " + qR1 + ", qR2= " + qR2 + ", qR3= " + qR3 + ", qRgen= " + qRgen + ", qRfix= " + qRfix + ", qRfloat= " + qRfloat;
-        ui->listWidget_Output->clear();
+//        ui->listWidget_Output->clear();  not yet.  I added menu option to clear the output area
         ui->listWidget_Output->addItem(qoutputline);
     } // else from if input "help"
 
@@ -304,7 +324,7 @@ void MainWindow::on_pushButton_exit_clicked() {
     GETSTACK(Stk);
 
 // need to write the file
-    QMessageBox::information(this,"filename", CombinedFilenamestring);
+    // QMessageBox::information(this,"filename", CombinedFilenamestring);  It's working, so I don't need this.
     QFile file(CombinedFilenamestring);
     if (! file.open(QFile::WriteOnly)) {  // need to match up what's read and what's written.
         QMessageBox::warning(this,"open failed","file could not be opened in write mode.");
@@ -312,7 +332,7 @@ void MainWindow::on_pushButton_exit_clicked() {
     }
     QDataStream stackout(&file);
 
-    FOR int i = 0; i < StackSize; i++ DO
+    FOR int i = T1; i >= X; i-- DO  // need to do in reverse so it's read in correctly.  This is a stack, so LIFO.
       stackout << Stk[i];
     ENDFOR;
 
@@ -380,4 +400,9 @@ void MainWindow::on_actionfloat_triggered() {
 
 void MainWindow::on_actiongen_triggered() {
     OutputState = outputgen;
+}
+
+void MainWindow::on_actionClear_Output_triggered()
+{
+    ui->listWidget_Output->clear();
 }

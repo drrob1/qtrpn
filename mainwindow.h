@@ -44,6 +44,8 @@ private slots:
 
     void on_actiongen_triggered();
 
+    void on_actionClear_Output_triggered();
+
 private:
     Ui::MainWindow *ui;
 };

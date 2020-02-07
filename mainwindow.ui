@@ -247,8 +247,15 @@
     <addaction name="actionfloat"/>
     <addaction name="actiongen"/>
    </widget>
+   <widget class="QMenu" name="menuClear_Output_Area">
+    <property name="title">
+     <string>Clear Output Area</string>
+    </property>
+    <addaction name="actionClear_Output"/>
+   </widget>
    <addaction name="menusigfig"/>
    <addaction name="menuOutputState"/>
+   <addaction name="menuClear_Output_Area"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="action2">
@@ -294,6 +301,11 @@
   <action name="actiongen">
    <property name="text">
     <string>gen</string>
+   </property>
+  </action>
+  <action name="actionClear_Output">
+   <property name="text">
+    <string>Clear Output</string>
    </property>
   </action>
  </widget>
