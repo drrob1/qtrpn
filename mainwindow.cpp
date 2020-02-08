@@ -43,7 +43,7 @@ QString CombinedFilenamestring;
 string LastCompiledDate = __DATE__;
 string LastCompiledTime = __TIME__;
 
-// Ui::MainWindow *ui;  //make ui global   Didn't work.  I think it crashed the pgm.
+// Ui::MainWindow *ui;  //make ui global   It worked, but I ended up having this passes as a param.
 
 enum OutputStateEnum {outputfix, outputfloat, outputgen};
 OutputStateEnum OutputState = outputfix;
@@ -251,16 +251,13 @@ void FUNCTION ProcessInput(QWidget *parent, Ui::MainWindow *ui, string cmdstr) {
             QString qstr = iter->c_str(); // recall that the -> operator is a type of dereference operator.
             ui->listWidget_Output->addItem(qstr);
         }
-        char about[] = "MainWindow Pgm last compiled ";
-        string aboutmsg = about;
-        aboutmsg = "MainWindow Pgm last compiled " + LastCompiledDate + " " + LastCompiledTime;
-        aboutmsg = LastCompiledDate + " " + LastCompiledTime;
-        QString qaboutmsg;
-        qaboutmsg.fromStdString(aboutmsg);
-        QMessageBox::information(parent,"about msg", qaboutmsg);
+
+        string aboutmsg = "MainWindow Pgm last compiled " + LastCompiledDate + " " + LastCompiledTime;
+        QString qaboutmsg = aboutmsg.c_str();  // only works when c-string.
+//        qaboutmsg.fromStdString(aboutmsg);                     doesn't work
+//        QMessageBox::information(parent,"about msg", qaboutmsg);  // only works when source string is a c-string, not stdstring.
+
         ui->listWidget_Output->addItem(qaboutmsg);
-
-
 
     } else {
         calcpair = GetResult(cmdstr);
@@ -272,22 +269,22 @@ void FUNCTION ProcessInput(QWidget *parent, Ui::MainWindow *ui, string cmdstr) {
             }
         }
 
-
         QString qR1, qR2, qR3, qRfix, qRfloat, qRgen;
         string str = to_string(calcpair.R);
         str = CropNStr(str);
 
         if (calcpair.R > 10000) str = AddCommas(str);
 
-        qR1 = qR1.arg(str.c_str()); // this doesn't work
-        qR2 = QString::fromStdString(str); // this is only line that works
-        qR3 = qR3.arg(calcpair.R);  // this doesn't work
-        qRgen = qRgen.arg(calcpair.R,0,'f',SigFig);// params are: double,int fieldwidth=0, char format='g', int precision= -1 ,QChar fillchar = QLatin1Char(' ').  Not working.
-        qRfix = qRfix.arg(calcpair.R,0,'f',SigFig);  // more general form of the conversion which can use 'e', 'f' and sigfig.  Not working
-        qRfloat = qRfloat.arg(calcpair.R,0,'f',SigFig);  // not working.
+        qR1 = QString("%1").arg(str.c_str());
+        qR2 = QString::fromStdString(str);
+        qR3 = QString("%1").arg(calcpair.R);
+        qRgen = QString("%1").arg(calcpair.R,5,'g',SigFig);// params are: double,int fieldwidth=0, char format='g', int precision= -1 ,QChar fillchar = QLatin1Char(' ').
+        qRfix = QString("%1").arg(calcpair.R,2,'f',SigFig);  // more general form of the conversion which can use 'e', 'f' and sigfig.
+        qRfloat = QString("%1").arg(calcpair.R,9,'e',SigFig);  // not working.
         QString qoutputline;
         qoutputline = "qR1= " + qR1 + ", qR2= " + qR2 + ", qR3= " + qR3 + ", qRgen= " + qRgen + ", qRfix= " + qRfix + ", qRfloat= " + qRfloat;
 //        ui->listWidget_Output->clear();  not yet.  I added menu option to clear the output area
+//        QMessageBox::information(parent,"qoutputline", qoutputline);
         ui->listWidget_Output->addItem(qoutputline);
     } // else from if input "help"
 
