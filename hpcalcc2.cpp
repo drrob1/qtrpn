@@ -51,7 +51,8 @@
    2 Feb 20 -- Started to add the prime and primefac command code, derived from Go.
    4 Feb 20 -- Fiddled with a format code for the prime cmd.
    7 Feb 20 -- Fixed a bug in greg cmd with regards to stack management.  And found an oddity on STACKDN, in that it does not alter X.  Don't really remember why not.
-   8 Feb 20 -- Added PopX, after doing this in Go first.
+   8 Feb 20 -- Added PopX, after doing this in Go first.  Now that PopX works, I'm using it in other spots also.
+                 And HCF now returns the HCF as a string without altering the stack.
 */
 
 /*
@@ -583,7 +584,7 @@ calcPairType FUNCTION GetResult(string s) {
   }
 */
 
-  int c,c1,c2;  // these are used for the HCF command
+//  int c,c1,c2;  // these are used for the HCF command
   int I,year;
   TokenType Token;
   bool EOL;
@@ -722,7 +723,8 @@ calcPairType FUNCTION GetResult(string s) {
                       calcpair.ss.push_back(" STO,RCL  -- store/recall the X register to/from the memory register.");
                       calcpair.ss.push_back(" `,~,SWAP,SWAPXY,<>,>< -- equivalent commands that swap the X and Y registers.");
                       calcpair.ss.push_back(" @, LastX -- put the value of the LASTX register back into the X register.");
-                      calcpair.ss.push_back(" !,DN,ROLLDN -- roll the stack down one register.  X goes to T1.");
+                      calcpair.ss.push_back(" !,ROLLDN -- roll the stack down one register.  X goes to T1.");
+                      calcpair.ss.push_back(" pop, dn -- remove X from the stack amd move the rest down one register.");
                       calcpair.ss.push_back(" , or UP -- stack up.  ! or DN -- stack down.");
                       calcpair.ss.push_back(" Dump, Dumpfixed, Dumpfloat, Sho -- dump the stack to the terminal.");
                       calcpair.ss.push_back(" sigN, fixN -- set the sigfig amount, range 0..9");
@@ -772,14 +774,14 @@ calcPairType FUNCTION GetResult(string s) {
                       STACKROLLDN();
                     ELSIF Token.uStr.compare("DN")  EQ 0 THEN
                       PushStacks();
-                      STACKROLLDN();
+                      PopX();
                     ELSIF (Token.uStr.compare(",") EQ 0) OR (Token.uStr.compare("UP") EQ 0) THEN
                       PushStacks();
                       STACKUP();
                     ELSIF Token.uStr.compare("!") EQ 0  THEN
                       PushStacks();
                       Stack[X] = Stack[Y];
-                      STACKDN();
+                      PopX();
                     ELSIF Token.uStr.compare("`") EQ 0  THEN
                       PushStacks();
                       SWAPXY();
@@ -823,12 +825,17 @@ calcPairType FUNCTION GetResult(string s) {
                         calcpair.ss.push_back(" Cannot convert X register to hex string, as number is out of range.");
                       ENDIF; // Hex command
                     ELSIF Token.uStr.compare("HCF") EQ 0  THEN
-                      PushStacks();
+                      int c,c1,c2; 
+//                                                             PushStacks();
                       c1 = abs(round(Stack[X]));
                       c2 = abs(round(Stack[Y]));
                       c  = HCF(c2,c1);
-                      STACKUP();
-                      Stack[X] = c;
+                      string s = "HCF between X and Y is ";
+                      string r = to_string(c);
+                      s.append(r);
+                      calcpair.ss.push_back(s);
+//                                                             STACKUP();
+//                                                             Stack[X] = c;
                     ELSIF Token.uStr.compare("P") EQ 0  THEN
                       //  essentially do nothing but print RESULT= line again.
                     ELSIF Token.uStr.compare("FRAC") EQ 0  THEN
@@ -894,7 +901,7 @@ calcPairType FUNCTION GetResult(string s) {
                       PushStacks();
                       LastX = Stack[X];
                       MDYType mdy = GREGORIAN(round(Stack[X]));
-                      STACKROLLDN();  // added  02/07/2020 08:31:20 PM 
+                      PopX();  // added Feb 8, 2020.
                       PUSHX(mdy.m);  // new way of handing this
                       PUSHX(mdy.d);
                       PUSHX(mdy.y);

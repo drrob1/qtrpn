@@ -15,6 +15,7 @@
   17 Nov 14 -- Converted to C++.
    7 Dec 14 -- Removed ElapsedSec from the exported data type.  See timlibc.h.
   20 Jan 20 -- Started converstion to idiomatic C++.
+   8 Feb 20 -- Bug in GREGORIAN slipped by here.  It was fixed in Go version July 2016.
 */
 
   const int ADIPM[12] =  {0,1,-1,0,0,1,1,2,3,3,4,4};
@@ -125,7 +126,15 @@ END;// JULIAN
 RETURN MDYType FUNCTION GREGORIAN(int Juldate) {
 
   int Y0,M0,D0;
+  const int MinJuldate = 630000;
   MDYType mdy;
+
+  IF Juldate < MinJuldate THEN  // fixed this bug in Go version July 2016.  Get infinite loop if Juldate is too small.
+      mdy.m = 0;
+      mdy.d = 0;
+      mdy.y = 0;
+      return mdy;
+  ENDIF;
 
   Y0 = Juldate / 365;
   M0 = 1;

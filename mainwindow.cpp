@@ -231,13 +231,20 @@ QString FUNCTION GetNameString(QWidget *parent) {
   }
 }
 
+string FUNCTION toupper(string s) {
+    string upper = "";
+    string::iterator iter;
+    for (iter = s.begin(); iter != s.end(); iter++) {
+        upper += CAP(*iter);
+    }
+    return upper;
+}
+
 void FUNCTION ProcessInput(QWidget *parent, Ui::MainWindow *ui, string cmdstr) {
     string LastCompiled = LastCompiledDate + " " + LastCompiledTime;
     calcPairType calcpair;
     vector<string> stringslice;
     vector<string>::iterator iter;
-    //string aboutmsg;    \ didn't matter.
-    //QString qaboutmsg;  /
 
     PushStacks();
 
@@ -245,9 +252,9 @@ void FUNCTION ProcessInput(QWidget *parent, Ui::MainWindow *ui, string cmdstr) {
     QString qs = QString::fromStdString(cmdstr);
     ui->listWidget_History->addItem(qs);
 
-    if (cmdstr.compare("help") == 0) {
+    if (cmdstr.compare("help") == 0) {   // help
         WriteHelp(parent);
-    } else if (cmdstr.find("sto") EQ 0) {
+    } else if (cmdstr.find("sto") EQ 0) {  // stoN
         int i = 0;
         char ch = '\0';
         if (cmdstr.length() > 3) {
@@ -257,9 +264,22 @@ void FUNCTION ProcessInput(QWidget *parent, Ui::MainWindow *ui, string cmdstr) {
         Storage[i].value = READX();
         if (i > 0) Storage[i].name = GetNameString(parent);
 
-    } else if (cmdstr.find("rcl") EQ 0) {
+    } else if (cmdstr.find("rcl") EQ 0) {  // rclN
+        int i = 0;
+        if (cmdstr.length() > 3) {
+            char ch = cmdstr.at(3); // the 4th char.
+            i = GetRegIdx(ch);
+        }
+        double R = Storage[i].value;
+        PUSHX(R);
 
-    } else if (cmdstr.compare("name") EQ 0) {
+    } else if (cmdstr.find("name") EQ 0) {
+        int i = 0;
+        if (cmdstr.length() > 4 ) {
+            char ch = cmdstr.at(4); // the 5th char.
+            i = GetRegIdx(ch);
+        }
+        Storage[i].name = GetNameString(parent);
 
     } else if ((cmdstr.compare("dump") EQ 0) OR (cmdstr.find("sho") EQ 0)) {
         // do nothing
@@ -272,12 +292,13 @@ void FUNCTION ProcessInput(QWidget *parent, Ui::MainWindow *ui, string cmdstr) {
 
         string aboutmsg = "MainWindow Pgm last compiled " + LastCompiledDate + " " + LastCompiledTime;
         QString qaboutmsg = aboutmsg.c_str();  // only works when c-string.
-//        qaboutmsg.fromStdString(aboutmsg);                     doesn't work
-//        QMessageBox::information(parent,"about msg", qaboutmsg);  // only works when source string is a c-string, not stdstring.
 
         ui->listWidget_Output->addItem(qaboutmsg);
 
     } else {
+        // cmdstr = toupper(cmdstr); this works, but it's not needed.
+        // QString qcmdstr = QString::fromStdString(cmdstr);
+        // QMessageBox::information(parent,"cmdstr is", qcmdstr);
         calcpair = GetResult(cmdstr);
 
         if (NOT calcpair.ss.empty()) {
