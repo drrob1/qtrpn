@@ -32,7 +32,7 @@ void ProcessInput(string cmdstr);  // forward reference
 int SigFig = -1;  // qt creator complained about a double definition of sigfig, so this one is now SigFig
 struct RegisterType {
     double value;
-    QString name;
+    QString name;  // w/ my struggles about string <--> QString, I have to more careful.  I have to use a QString for I/O.
 };
 
 ARRAYOF RegisterType Storage[36];  // var Storage []RegisterType  in Go syntax
@@ -219,7 +219,17 @@ void FUNCTION repaint(Ui::MainWindow *ui) {
   WriteReg(ui);
 } // repaint()
 
+QString FUNCTION GetNameString(QWidget *parent) {
+  QString prompt = "Input name, will make - or = into a space : ";
+  bool ok;
 
+  QString text = QInputDialog::getText(parent,"Enter Name for Storage Register", prompt,QLineEdit::Normal,"",&ok);
+  if (ok) {
+      return text;
+  } else {
+      return "";
+  }
+}
 
 void FUNCTION ProcessInput(QWidget *parent, Ui::MainWindow *ui, string cmdstr) {
     string LastCompiled = LastCompiledDate + " " + LastCompiledTime;
@@ -238,6 +248,14 @@ void FUNCTION ProcessInput(QWidget *parent, Ui::MainWindow *ui, string cmdstr) {
     if (cmdstr.compare("help") == 0) {
         WriteHelp(parent);
     } else if (cmdstr.find("sto") EQ 0) {
+        int i = 0;
+        char ch = '\0';
+        if (cmdstr.length() > 3) {
+            ch = cmdstr.at(3);  // the 4th character, right after the 'o' in 'sto'
+            i = GetRegIdx(ch);
+        }
+        Storage[i].value = READX();
+        if (i > 0) Storage[i].name = GetNameString(parent);
 
     } else if (cmdstr.find("rcl") EQ 0) {
 

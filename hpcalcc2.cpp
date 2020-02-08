@@ -51,6 +51,7 @@
    2 Feb 20 -- Started to add the prime and primefac command code, derived from Go.
    4 Feb 20 -- Fiddled with a format code for the prime cmd.
    7 Feb 20 -- Fixed a bug in greg cmd with regards to stack management.  And found an oddity on STACKDN, in that it does not alter X.  Don't really remember why not.
+   8 Feb 20 -- Added PopX, after doing this in Go first.
 */
 
 /*
@@ -72,14 +73,14 @@ int sigfig = -1;
 
 
 //-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------
+
 PROCEDURE STACKUP() IS
   int S;
   FOR S = T2; S >= X; --S DO
     Stack[S+1] = Stack[S];
   ENDFOR;
 ENDFUNC;// STACKUP
+
 //------------------------------------------------------
 PROCEDURE STACKDN() IS
   int S;
@@ -87,6 +88,7 @@ PROCEDURE STACKDN() IS
     Stack[S] = Stack[S+1];
   ENDFOR;
 ENDFUNC; // STACKDN
+
 //------------------------------------------------------
 PROCEDURE STACKROLLDN() IS
   double TEMP;
@@ -95,11 +97,24 @@ PROCEDURE STACKROLLDN() IS
   STACKDN();
   Stack[T1] = TEMP;
 ENDFUNC; // STACKROLLDN
+
 //------------------------------------------------------
 PROCEDURE PUSHX(double R) IS
   STACKUP();
   Stack[X] = R;
-END; //
+END; // PUSHX
+
+
+// ----------------------------------------------------- PopX ---------------------
+double FUNCTION PopX() {
+    double x;
+	x = Stack[X];
+	for (int S = X; S < T1; S++) {
+		Stack[S] = Stack[S+1];
+	}
+	return x;
+} // PopX
+
 //------------------------------------------------------
 RETURN double FUNCTION READX() IS
   return Stack[X];
@@ -670,6 +685,12 @@ calcPairType FUNCTION GetResult(string s) {
                       str.pop_back();  // delete the last ", "
                       str.pop_back();  // delete the last ", "
                       calcpair.ss.push_back(str);
+
+                    ELSIF Token.uStr.find("POP") EQ 0 THEN // allow POP, POPX, or even POPULAR :-)
+                        PushStacks();
+                        double x = PopX();
+                        string str = to_string(x);
+                        calcpair.ss.push_back(str);
 
                     ELSIF Token.uStr.compare("SQR") EQ 0 THEN
                       LastX = Stack[X];
