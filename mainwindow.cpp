@@ -285,7 +285,7 @@ void FUNCTION ProcessInput(QWidget *parent, Ui::MainWindow *ui, string cmdstr) {
         qoutputline = "qR1= " + qR1 + ", qR2= " + qR2 + ", qR3= " + qR3 + ", qRgen= " + qRgen + ", qRfix= " + qRfix + ", qRfloat= " + qRfloat;
 //        ui->listWidget_Output->clear();  not yet.  I added menu option to clear the output area
 //        QMessageBox::information(parent,"qoutputline", qoutputline);
-        ui->listWidget_Output->addItem(qoutputline);
+//        ui->listWidget_Output->addItem(qoutputline);  these all work now.  I needed to use a new syntax.
     } // else from if input "help"
 
 // I have to WriteStack, WriteReg, WriteHelp, output command line list, process some commands not run thru GetResult, like stoN, rclN, fix, float, gen, exit, quit, sigfig,

@@ -50,6 +50,7 @@
    2 Feb 20 -- Added fixN command to behave like sigN command.
    2 Feb 20 -- Started to add the prime and primefac command code, derived from Go.
    4 Feb 20 -- Fiddled with a format code for the prime cmd.
+   7 Feb 20 -- Fixed a bug in greg cmd with regards to stack management.  And found an oddity on STACKDN, in that it does not alter X.  Don't really remember why not.
 */
 
 /*
@@ -82,7 +83,7 @@ ENDFUNC;// STACKUP
 //------------------------------------------------------
 PROCEDURE STACKDN() IS
   int S;
-  FOR S = Y; S < T1; ++S DO
+  FOR S = Y; S < T1; ++S DO // note that this does not change X.  I don't remember why.  I regret that design choice now, as of 02/07/2020 09:30:32 PM
     Stack[S] = Stack[S+1];
   ENDFOR;
 ENDFUNC; // STACKDN
@@ -871,9 +872,8 @@ calcPairType FUNCTION GetResult(string s) {
                     ELSIF Token.uStr.compare("GREG") EQ 0 THEN
                       PushStacks();
                       LastX = Stack[X];
-//                      STACKUP();   old way of doing this
-//                      STACKUP();   and then directly assigning STACK[X]
                       MDYType mdy = GREGORIAN(round(Stack[X]));
+                      STACKROLLDN();  // added  02/07/2020 08:31:20 PM 
                       PUSHX(mdy.m);  // new way of handing this
                       PUSHX(mdy.d);
                       PUSHX(mdy.y);
