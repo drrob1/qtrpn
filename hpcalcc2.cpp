@@ -55,7 +55,7 @@
                  And HCF now returns the HCF as a string without altering the stack.
                  UNDO is still not working.  I'm going to change stackmatrix operations so they do not do a rollup or rolldonw, instead just a move up and move down.
                  This file is now different than the version in ~/cppcode.
-   9 Feb 20 -- Added that > or < will also swap X <--> Y.
+   9 Feb 20 -- Added that > or < will also swap X <--> Y.  And changed how DOW works, now it doesn't alter stack but returns a string message.
 
 */
 
@@ -935,9 +935,15 @@ calcPairType FUNCTION GetResult(string s) {
                       PUSHX(mdy.d);
                       PUSHX(mdy.y);
                     ELSIF Token.uStr.compare("DOW") EQ 0 THEN
-                      PushStacks();
-                      LastX = Stack[X];
-                      Stack[X] = (lround(LastX) MOD 7);
+                      // PushStacks();
+                      // LastX = Stack[X];
+                      // Stack[X] = (lround(LastX) MOD 7);
+                      int dow = lround(Stack[X]) MOD 7;
+                      char s[50];
+                      sprintf(s," dow is %d, Juldate in X is %ld, which is a %s.",dow, lround(Stack[X]), DAYNAMES[dow].c_str());
+                      string str = s;
+                      calcpair.ss.push_back(str);
+
                     ELSIF Token.uStr.compare("PI") EQ 0 THEN
                       PushStacks();
                       PUSHX(PI);
