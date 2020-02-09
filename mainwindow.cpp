@@ -246,7 +246,7 @@ void FUNCTION ProcessInput(QWidget *parent, Ui::MainWindow *ui, string cmdstr) {
     vector<string> stringslice;
     vector<string>::iterator iter;
 
-    PushStacks();
+//    PushStacks();  looks like there were too many calls to PushStacks();  When I commented this out, undo started to work.
 
     // Write cmdstr to the history box, ie, listWidget_History.
     QString qs = QString::fromStdString(cmdstr);
@@ -294,6 +294,59 @@ void FUNCTION ProcessInput(QWidget *parent, Ui::MainWindow *ui, string cmdstr) {
         QString qaboutmsg = aboutmsg.c_str();  // only works when c-string.
 
         ui->listWidget_Output->addItem(qaboutmsg);
+
+    } else if (cmdstr.compare("debug") EQ 0) {
+            GETSTACK(Stk);
+            stringstream stream, stream1, stream2, stream3;
+            vector<double> stackmatrixrow;
+
+            stream << "Raw Stk[] with X first is : ";
+
+            FOR int i = X; i < StackSize; i++ DO
+              string str = to_string(Stk[i]);
+              stream << str  << "  ";
+            ENDFOR;
+
+            QString qoutput = QString::fromStdString(stream.str());
+            ui->listWidget_Output->addItem(qoutput);
+
+            stackmatrixrow = GetStackMatrixRow(X);
+            stream1 << "First row of StackMatrix is :";
+
+            FOR int i = X; i < StackSize; i++ DO
+              string str = to_string(stackmatrixrow.at(i));
+              stream1 << str  << "  ";
+            ENDFOR;
+
+            qoutput = "";
+            qoutput = QString::fromStdString(stream1.str());
+            ui->listWidget_Output->addItem(qoutput);
+
+            stackmatrixrow = GetStackMatrixRow(Y);
+            stream2 << "Second row of StackMatrix is :";
+
+            FOR int i = X; i < StackSize; i++ DO
+              string str = to_string(stackmatrixrow.at(i));
+              stream2 << str  << "  ";
+            ENDFOR;
+
+            qoutput = "";
+            qoutput = QString::fromStdString(stream2.str());
+            ui->listWidget_Output->addItem(qoutput);
+
+            stackmatrixrow = GetStackMatrixRow(Z);
+            stream3 << "3rd row of StackMatrix is : ";
+
+            FOR int i = X; i < StackSize; i++ DO
+              string str = to_string(stackmatrixrow.at(i));
+              stream3 << str << "  ";
+            ENDFOR;
+            stream3 << endl;
+
+            qoutput = "";
+            qoutput = QString::fromStdString(stream3.str());
+            ui->listWidget_Output->addItem(qoutput);
+
 
     } else {
         // cmdstr = toupper(cmdstr); this works, but it's not needed.

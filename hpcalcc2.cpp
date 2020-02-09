@@ -53,6 +53,7 @@
    7 Feb 20 -- Fixed a bug in greg cmd with regards to stack management.  And found an oddity on STACKDN, in that it does not alter X.  Don't really remember why not.
    8 Feb 20 -- Added PopX, after doing this in Go first.  Now that PopX works, I'm using it in other spots also.
                  And HCF now returns the HCF as a string without altering the stack.
+                 UNDO is still not working.  I'm going to change stackmatrix operations so they do not do a rollup or rolldonw, instead just a move up and move down.
 */
 
 /*
@@ -130,7 +131,7 @@ END; // SWAPXY
 //------------------------------------------------------
 PROCEDURE GETSTACK(double STK[]) IS // this works because array without params is a pointer.
   int S;
-  FOR S = X; S <= T1; ++S DO
+  FOR S = X; S <= T1; S++ DO
     STK[S] = Stack[S];
   ENDFOR;
 END;// GETSTACK
@@ -360,7 +361,7 @@ PROCEDURE StacksUp() {
 PROCEDURE StacksDown() {
   int i,j;
   FOR i=Y; i <= T1; i++ DO
-    FOR j=0; j <= T1; j++ DO
+    FOR j=X; j <= T1; j++ DO
       StackMatrix[i-1][j] = StackMatrix[i][j];
     ENDFOR; // FOR j
   ENDFOR;  // FOR i
@@ -373,6 +374,14 @@ PROCEDURE PushStacks() {
     StackMatrix[0][j] = Stack[j];
   ENDFOR;
 }; // PushStacks
+//--------------------------------------------------------
+PROCEDURE PopStacks() {  // also works as an undo for main stack.
+    for (int i = X; i < StackSize; i++) {
+        Stack[i] = StackMatrix[0][i];
+    }
+
+    StacksDown();
+}
 //--------------------------------------------------------
 PROCEDURE RollDownStacks() {    // undo operation for main stack
   int j;
@@ -574,7 +583,23 @@ vector<int> FUNCTION PrimeFactorMemoized(int U) {
 	ENDFOR;
 	return PrimeUfactors;
 } // PrimeFactorMemoized
+//-------------------------------------------------------------------------
+// I'm thinking of returning a StackMatrix row as a vector<double>.  The row is an input param.
+vector<double> FUNCTION GetStackMatrixRow(int i) {
+    vector<double> StackMatrixRow;
+    StackMatrixRow.clear();
 
+    IF i > StackSize THEN
+            return StackMatrixRow;
+    ENDIF
+
+    for (int j = X; j < StackSize; j++) {
+        StackMatrixRow.push_back(StackMatrix[i][j]);
+    }
+    return StackMatrixRow;
+}
+//-------------------------------------------------------------------------
+// Do I even need to return the Stack as a vector<double>?  This duplicates GETSTACK.
 //-------------------------------------------------------------------------
 calcPairType FUNCTION GetResult(string s) {
 /*
@@ -584,7 +609,6 @@ calcPairType FUNCTION GetResult(string s) {
   }
 */
 
-//  int c,c1,c2;  // these are used for the HCF command
   int I,year;
   TokenType Token;
   bool EOL;
@@ -597,6 +621,7 @@ calcPairType FUNCTION GetResult(string s) {
   WHILE true DO //  UNTIL reached EOL
     EOL = GETTKNREAL(Token);
     IF EOL THEN break; ENDIF;
+
     I = Token.iSum;
     SWITCH  Token.STATE DO
       case DELIM : break; /* do nothing */
@@ -758,6 +783,7 @@ calcPairType FUNCTION GetResult(string s) {
                       PUSHX(MemReg);
                     ELSIF Token.uStr.compare("UNDO") EQ 0 THEN
                       RollDownStacks();
+                      //      PopStacks();
                     ELSIF Token.uStr.compare("REDO") EQ 0 THEN
                       RollUpStacks();
                     ELSIF Token.uStr.compare("SWAP") EQ 0 THEN

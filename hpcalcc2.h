@@ -30,3 +30,4 @@ PROCEDURE RollDownStacks();
 PROCEDURE RollUpStacks();
 RETURN string FUNCTION ToHex(double L);
 RETURN calcPairType FUNCTION GetResult(string s);
+vector<double> FUNCTION GetStackMatrixRow(int i);
