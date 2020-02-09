@@ -1,3 +1,11 @@
+/* Revision History
+ * -------- -------
+ * 9 Feb 20 -- Code finally works as intended, doing most of what the go versions do.  It only processes one command in the lineedit box at a time, ignoring other commands.
+ *               I don't remember when I first decided to attempt this; I believe it was Sep-Oct 2019.  That's ~ 4 months ago.
+ *
+ *
+ */
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <vector>
@@ -224,10 +232,15 @@ QString FUNCTION GetNameString(QWidget *parent) {
   bool ok;
 
   QString text = QInputDialog::getText(parent,"Enter Name for Storage Register", prompt,QLineEdit::Normal,"",&ok);
-  if (ok) {
-      return text;
-  } else {
+  if (NOT ok) {
       return "";
+  }
+  if ((text == "t") OR (text == "today")) {
+      MDYType mdy = TIME2MDY();
+      string datestring, dstr;
+      datestring = MDY2STR(mdy.m,mdy.d,mdy.y, dstr);
+      text = text.fromStdString(datestring);
+      return text;
   }
 }
 
