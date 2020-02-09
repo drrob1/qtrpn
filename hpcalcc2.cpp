@@ -54,6 +54,9 @@
    8 Feb 20 -- Added PopX, after doing this in Go first.  Now that PopX works, I'm using it in other spots also.
                  And HCF now returns the HCF as a string without altering the stack.
                  UNDO is still not working.  I'm going to change stackmatrix operations so they do not do a rollup or rolldonw, instead just a move up and move down.
+                 This file is now different than the version in ~/cppcode.
+   9 Feb 20 -- Added that > or < will also swap X <--> Y.
+
 */
 
 /*
@@ -629,7 +632,7 @@ calcPairType FUNCTION GetResult(string s) {
                  PUSHX(Token.rSum);
                  PushStacks();
                  break;
-      case OP  : IF (I EQ 6) OR (I EQ 20) THEN
+      case OP  : IF (I EQ 6) OR (I EQ 20) OR (I EQ 1) OR (I EQ 3) THEN  // allow <>, ><, <, > to all call SWAPXY().
       	            SWAPXY();
                  ELSE
                     LastX = Stack[X];
