@@ -42,6 +42,7 @@
                  member functions.
   18 Jan 15 -- Found bug in that single digits followed by add or subtract are not processed correctly by GETTKNREAL.
   24 Jan 20 -- Converting to tokenizec2 and using a more Go like syntax to head for Qt.
+  10 Feb 20 -- Compiler flagged use of dgtval as possibly uninitialized when used.  So I initialized it.
 */
 
 /*   Declared in tokenizec2.h
@@ -468,14 +469,14 @@ ENDFUNC; // ishexdigit
 //************************************************************************************
 int FUNCTION FromHex(string s) IS
   int result = 0;
-  int dgtval;
+  int dgtval = 0; // compiler flagged this line w/ a warning that this variable may be uninitialized by its use below.  Fixed 10 Feb 2020.
   char dgtchar;
   const int OrdinalZero = '0';
   const int OrdinalCapA = 'A';
   string::iterator t;
 
   FOR t = s.begin(); t NE s.end(); t++ DO 
-    dgtchar = DEREF t;
+    dgtchar = *t;
     IF isdigit(dgtchar) THEN
       dgtval = dgtchar - OrdinalZero;
     ELSIF ishexdigit(dgtchar) THEN

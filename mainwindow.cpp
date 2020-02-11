@@ -242,6 +242,7 @@ QString FUNCTION GetNameString(QWidget *parent) {
       text = text.fromStdString(datestring);
       return text;
   }
+  return text;  // compiler flagged this as possible end of function without a return.  I don't think this line can be reached, but it makes the compiler happy, so it's here.
 }
 
 string FUNCTION toupper(string s) {
