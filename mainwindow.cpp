@@ -1,7 +1,9 @@
 /* Revision History
  * -------- -------
- * 9 Feb 20 -- Code finally works as intended, doing most of what the go versions do.  It only processes one command in the lineedit box at a time, ignoring other commands.
+ *  9 Feb 20 -- Code finally works as intended, doing most of what the go versions do.  It only processes one command in the lineedit box at a time, ignoring other commands.
  *               I don't remember when I first decided to attempt this; I believe it was Sep-Oct 2019.  That's ~ 4 months ago.
+ *
+ * 14 Feb 20 -- Fixed a minor output tweak for in WriteReg().
  *
  *
  */
