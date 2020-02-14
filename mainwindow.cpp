@@ -169,7 +169,7 @@ OutputStateEnum OutputState = outputfix;
  */
   stringstream stream;
 
-  stream << "The following registers are not zero.";
+  stream << "The following registers are not zero." << endl;
   for (int i = 0; i < 36; i++) {
       if (Storage[i].value != 0.) {
           stream << "Reg [" << GetRegChar(i) << "]: ";
