@@ -54,7 +54,7 @@
      <rect>
       <x>510</x>
       <y>70</y>
-      <width>321</width>
+      <width>101</width>
       <height>451</height>
      </rect>
     </property>
@@ -217,6 +217,16 @@
       </widget>
      </item>
     </layout>
+   </widget>
+   <widget class="QComboBox" name="comboBox">
+    <property name="geometry">
+     <rect>
+      <x>620</x>
+      <y>70</y>
+      <width>211</width>
+      <height>451</height>
+     </rect>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

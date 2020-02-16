@@ -46,6 +46,8 @@ private slots:
 
     void on_actionClear_Output_triggered();
 
+    void on_comboBox_activated(const QString &arg1);
+
 private:
     Ui::MainWindow *ui;
 };

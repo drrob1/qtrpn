@@ -5,6 +5,8 @@
  *
  * 14 Feb 20 -- Fixed a minor output tweak for in WriteReg().
  *
+ * 15 Feb 20 -- Changing the History/Display box to a combobox so I can click on an item and reuse it.
+ *
  *
  */
 
@@ -264,9 +266,10 @@ void FUNCTION ProcessInput(QWidget *parent, Ui::MainWindow *ui, string cmdstr) {
 
 //    PushStacks();  looks like there were too many calls to PushStacks();  When I commented this out, undo started to work.
 
-    // Write cmdstr to the history box, ie, listWidget_History.
+    // Write cmdstr to the combobox, which was the history box, ie, listWidget_History.
     QString qs = QString::fromStdString(cmdstr);
     ui->listWidget_History->addItem(qs);
+
 
     if (cmdstr.compare("help") == 0) {   // help
         WriteHelp(parent);
@@ -510,4 +513,10 @@ void MainWindow::on_actiongen_triggered() {
 void MainWindow::on_actionClear_Output_triggered()
 {
     ui->listWidget_Output->clear();
+}
+
+void MainWindow::on_comboBox_activated(const QString &arg1)
+{
+    QString cmdstr = arg1;
+    //QString qs = ui->comboBox->currentText();
 }
