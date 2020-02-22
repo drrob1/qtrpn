@@ -5,7 +5,10 @@
  *
  * 14 Feb 20 -- Fixed a minor output tweak for in WriteReg().
  *
- * 15 Feb 20 -- Changing the History/Display box to a combobox so I can click on an item and reuse it.
+ * 15 Feb 20 -- Changing the History/Display box to a combobox so I can click on an item and reuse it.  Needed to create qtrpn2 so this could be tested.
+ *                Don't know why I could not change the mainwindow form.  Perhaps I had to erase the build directory where the moc_ stuff is.  I did not try this.
+ *
+ * 22 Feb 20 -- I'm bothered by how the pgm starts blank.  I first tried to make ui global, but the pgm crashed.  So I make the gbl var ui2, and this worked.
  *
  *
  */
@@ -38,6 +41,10 @@
 #include "makesubst.h"
 
 void ProcessInput(string cmdstr);  // forward reference
+void WriteReg(Ui::MainWindow *ui); // forward reference
+void WriteStack(Ui::MainWindow *ui); // forward reference
+void FUNCTION repaint(Ui::MainWindow *ui); // forward reference
+void FUNCTION REPAINT(); // forward reference
 
 //double R;  not global
 //int I;     not global
@@ -55,7 +62,7 @@ QString CombinedFilenamestring;
 string LastCompiledDate = __DATE__;
 string LastCompiledTime = __TIME__;
 
-// Ui::MainWindow *ui;  //make ui global   It worked, but I ended up having this passes as a param.
+Ui::MainWindow *ui2;  //make ui global, but w/ a different name to avoid conflicts.  The program crashed when I first tried without changing this name.
 
 enum OutputStateEnum {outputfix, outputfloat, outputgen};
 OutputStateEnum OutputState = outputfix;
@@ -93,6 +100,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         }
     }
 
+    ui2 = ui;  // assign the constructed object to the global of a different name to avoid conflicts that would make the pgm crash.
+
     QStringList list = QCoreApplication::arguments();
     QString qstr, argv;
     if (NOT list.isEmpty()){
@@ -104,7 +113,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         }
 //        ui->lineEdit->setText(argv);  It's not doing what I want when run thru Qt Creator.
     }
-
+    REPAINT();  // looks like this will work.
 }
 
 MainWindow::~MainWindow() { // destructor
@@ -224,6 +233,10 @@ void WriteHelp(QWidget *parent) {  // this param is intended so that 'this' can 
       QString qs = QString::fromStdString(stream.str());
       QMessageBox::information(parent,"Help", qs);
     ENDIF;
+}
+
+void FUNCTION REPAINT() {
+    repaint(ui2); // This crashed before I make the global var a different name.
 }
 
 void FUNCTION repaint(Ui::MainWindow *ui) {
